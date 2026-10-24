@@ -1,0 +1,13 @@
+# Core Scientific & Data Processing
+pandas>=2.2.0
+numpy>=1.26.0
+pyarrow>=15.0.0
+python-dateutil>=2.9.0
+python-dotenv>=1.0.0
+sentence-transformers>=3.0.0
+
+# Local research dashboard
+streamlit>=1.40.0
+
+# Testing & Quality
+pytest>=8.0.0

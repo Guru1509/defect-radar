@@ -1,0 +1,11 @@
+MIT License
+
+Copyright (c) 2026 DefectRadar contributors
+
+Scope: For this license, “Covered Code” means only original DefectRadar code authored for this project in `src/`, `dashboard/`, `backend/`, and `tests/`. This license does not cover NHTSA source data, NHTSA-derived datasets or research artifacts, third-party materials, software dependencies, model weights, trademarks, documentation, or any other material not owned by the project contributors. Those materials remain subject to their own applicable terms and rights.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of the covered code to deal in the covered code without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the covered code, and to permit persons to whom the covered code is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the covered code.
+
+THE COVERED CODE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE COVERED CODE OR THE USE OR OTHER DEALINGS IN THE COVERED CODE.
