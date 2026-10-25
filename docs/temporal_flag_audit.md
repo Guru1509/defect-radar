@@ -1,6 +1,8 @@
 # DEFECTRADAR — Phase 5C: Temporal Flag Quality Audit
 
-**Scope:** Read-only audit of the 296 `is_anomaly=true` rows in `data/processed/monthly_component_trends.parquet`, the baseline implementation, feasibility/method docs, and eight deterministic complaint narratives. No detector or canonical data was changed.
+**Scope:** Read-only audit of the 296 `is_anomaly=true` rows in `data/processed/monthly_component_trends.parquet`, the baseline implementation, and feasibility/method docs. Eight records were reviewed locally as a qualitative check; individual complaint narratives and record identifiers are not reproduced here. No detector or canonical data was changed.
+
+NHTSA supplies the underlying complaint records; the flag counts, comparisons, and interpretations below are project-authored aggregate analysis. Field and dataset provenance is listed in [the data audit](data_audit.md).
 
 ## Flag distribution
 
@@ -40,13 +42,11 @@ Selected high-count flags (count/share thresholds both had to be crossed):
 
 For these rows, history comprised 3–5 prior same-calendar-month observations. The ADAS example is a particularly large category-level jump from a low baseline; it persists over many later months, which is consistent with a taxonomy/reporting adoption shift as well as with increased reports, and cannot be interpreted as a single new defect.
 
-## Narrative spot-check and artifacts
+## Aggregate qualitative check and artifacts
 
-Eight source narratives were selected reproducibly: for July 2019, two lowest-sorted IDs in the ENGINE/POWER TRAIN overlap and one lowest-sorted ID unique to each system; for July 2020 ELECTRICAL SYSTEM and February 2022 FORWARD COLLISION AVOIDANCE, two IDs per flag selected from sorted eligible IDs using `random.Random(2526)`. Reviewed complaint IDs: **11228650, 11228681, 11228216, 11228589, 11339459, 11341322, 11454309, 11450247**.
+Eight records were selected reproducibly without retaining their identifiers in this document: for 2019-07, the two lowest-sorted IDs in the ENGINE/POWER TRAIN overlap and one lowest-sorted ID unique to each system; for 2020-07 ELECTRICAL SYSTEM and 2022-02 FORWARD COLLISION AVOIDANCE, two IDs per flag were selected from sorted eligible IDs using `random.Random(2526)`.
 
-- July 2019 ENGINE/POWER TRAIN examples covered engine-power reduction with hard braking, downshift/engine power loss, an oil leak, and a transfer-case failure—related broad vehicle systems, but not one narrow defect theme.
-- July 2020 ELECTRICAL SYSTEM examples concerned a central door-lock module and a detached blind-spot sensor, illustrating the breadth of the system category.
-- February 2022 FORWARD COLLISION AVOIDANCE examples described false collision warnings / unintended braking. One narrative explicitly said the complainant was adding information to an existing investigation (PE22-003); the other described sudden braking while using Tesla Autopilot. These are relevant reports, but the sample is mixed and cannot establish the signal preceded the official attention.
+Across the eight reviewed records, themes were heterogeneous within broad component-system categories. The small qualitative sample does not establish one narrow defect theme or show that a statistical flag preceded official attention. Individual complaint wording and record-level dates are intentionally omitted.
 
 The July 2019 ENGINE and POWER TRAIN flags share **238 complaints**; 1,454 and 1,507 unique complaints respectively were assigned to those systems that month. This is expected multi-label counting, not duplicate rows within a system. Across all 120 months, summed system shares ranged from **126.24% to 147.60%** because one complaint may name multiple systems. No `__MISSING__` category flags occurred. Every flag met the implementation’s minimums: current count at least **19**, at least **3** prior seasons, and at least **30** historical complaints; no low-volume gate was bypassed.
 

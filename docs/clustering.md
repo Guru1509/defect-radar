@@ -3,6 +3,8 @@
 **Run date:** October 23, 2026  
 **Purpose:** Compare two semantic clustering approaches on a manageable sample before considering larger runs. This is an exploratory sample, not a validated defect detector.
 
+Underlying complaint records are NHTSA source material. Methods, metrics, and interpretations below are project-authored; no complaint narrative text or individual record identifiers are reproduced. Dataset provenance is documented in [the data audit](data_audit.md).
+
 ## Method
 
 - Sample: **5,000** complaint embeddings, chosen without replacement with NumPy seed **42** from the 651,260 eligible shard rows.
@@ -22,15 +24,11 @@ K-Means cluster sizes (largest to smallest): **512, 399, 325, 296, 288, 276, 271
 
 HDBSCAN cluster sizes: **865, 42**; remaining sample points are noise. Cluster labels are arbitrary IDs, not defect names.
 
-## Narrative spot-check
+## Aggregate qualitative review
 
-Representatives were chosen nearest to each method's cluster center/mean for its three largest clusters. This hand inspection is qualitative and limited to those examples.
+Representatives were chosen nearest to each method's cluster center/mean for its three largest clusters. This hand inspection is qualitative and limited to those examples; the report retains aggregate theme assessments only.
 
-- **K-Means cluster 8 (512):** one narrative describes stalling/overheating/transmission warnings; another describes a pothole followed by suspension/control-arm concerns. These examples do **not** support a single narrow defect interpretation.
-- **K-Means cluster 15 (399):** examples describe sudden engine/electrical shutdown and blown fuses, suggesting a broad loss-of-power/electrical theme, but not one precise component failure.
-- **K-Means cluster 1 (325):** examples focus on Ford recall notification/repair concerns rather than a shared physical failure symptom. This indicates that complaint narratives can cluster by administrative context.
-- **HDBSCAN cluster 0 (865):** inspected examples discuss Takata airbag recall notices and unavailable repair parts. This is a coherent recall-administration theme, but does not itself identify a specific failure mechanism.
-- **HDBSCAN cluster 1 (42):** inspected examples describe windshield cracking, including spontaneous cracking. This small cluster appears more symptom-focused.
+The reviewed representatives showed mixed and broad themes. Some groups appeared influenced by administrative or recall-related language, while others combined multiple vehicle-system topics. This limited qualitative inspection does not establish a narrow defect interpretation or validate a defect detector.
 
 ## Phase 4B: Quantitative and Qualitative Evaluation
 
@@ -43,9 +41,9 @@ The existing sample summary supports these additional **measured/derived-from-co
 
 K-Means cluster sizes have a 3.94× max/min ratio; HDBSCAN's two assigned clusters have a 20.60× ratio. These describe size imbalance only, not semantic quality.
 
-**Silhouette scores were not calculated.** The experiment's recorded results include cluster counts and representative examples, but do not preserve row-level labels or the sampled embedding matrix in a reusable project artifact. The saved counts and narrative excerpts are insufficient to calculate either K-Means silhouette or HDBSCAN silhouette on non-noise assignments. Re-running was intentionally avoided for this targeted review; no silhouette value is inferred.
+**Silhouette scores were not calculated.** The experiment's recorded results include cluster counts and representative selection notes, but do not preserve row-level labels or the sampled embedding matrix in a reusable project artifact. The saved counts and aggregate review notes are insufficient to calculate either K-Means silhouette or HDBSCAN silhouette on non-noise assignments. Re-running was intentionally avoided for this targeted review; no silhouette value is inferred.
 
-The previous narrative spot-check found clear recall-notification/repair language in K-Means cluster 1 and HDBSCAN cluster 0, suggesting recall-related boilerplate is prominent in those inspected examples. Other inspected groups included mixed symptoms and windshield cracking. Vehicle/model names appear in some complaint narratives, but this small qualitative sample cannot establish that those details dominate clustering; the experiment embeds complaint narratives, not separate canonical make/model metadata.
+The earlier qualitative review suggests that administrative wording can influence grouping, while other reviewed groups remain heterogeneous. This sample cannot establish that any particular topic dominates clustering; the experiment embeds complaint narratives, not separate canonical make/model metadata. No individual narrative wording is included here.
 
 ## Phase 4C: Saved-Label Evaluation and Text-Preparation Comparison
 
@@ -73,11 +71,11 @@ K-Means cluster sizes, descending:
 
 HDBSCAN sizes (excluding noise): baseline **865, 42**; narrow redaction **821, 41**. Noise counts are **4,093** baseline and **4,138** revised. Label IDs are arbitrary.
 
-### Representative narrative review and interpretation
+### Aggregate qualitative review and interpretation
 
-The fixed representative selection is nearest-to-center examples from the three largest K-Means groups and all HDBSCAN groups. Baseline inspection again found a mixed K-Means group (stall/overheat versus suspension/pothole concerns), a broad electrical shutdown group, and a recall-notification group. HDBSCAN's large group was dominated in inspected examples by Takata recall notices, unavailable parts, and repair delays; its small group described windshield cracking.
+The fixed representative selection is nearest-to-center examples from the three largest K-Means groups and all HDBSCAN groups. Baseline inspection again found heterogeneous K-Means themes and recall-administration language among reviewed HDBSCAN representatives. These are qualitative aggregate observations, not defect labels or evidence of predictive performance.
 
-After the narrow redaction, the revised K-Means representatives still included a vehicle stall, an electrical shutdown, and a lost-Takata-recall-letter complaint. HDBSCAN's large-cluster examples still included Takata notice language and dashboard/airbag complaints; the windshield-cracking cluster remained small. The transformation removed campaign-number and unavailable-part boilerplate in some narratives, but standard variants such as “Takata recall” and “recall repair” remained. Vehicle make/model details also remain in narrative text; this experiment does not isolate their effect.
+After the narrow redaction, aggregate qualitative review still found some recall-related language and broad, mixed topics. The transformation removed the specified campaign-notice and repair-delay templates from some records but did not remove all related wording. Vehicle make/model mentions were not isolated by this experiment. No individual narrative wording is retained in this report.
 
 Neither silhouette increased: K-Means fell from **0.042678 to 0.031077**; HDBSCAN fell from **0.182488 to 0.165121**, and HDBSCAN coverage declined by **0.90 percentage points**. These low scores and spot checks do not support improved semantic grouping. The HDBSCAN score applies only to its small assigned subset, so it must be read with its coverage/noise rate.
 
@@ -102,9 +100,9 @@ Neither silhouette increased: K-Means fell from **0.042678 to 0.031077**; HDBSCA
 
 PCA K-Means cluster sizes (descending): **471, 390, 338, 331, 319, 266, 258, 256, 250, 244, 237, 233, 226, 207, 206, 186, 176, 157, 149, 100**. PCA HDBSCAN cluster sizes (excluding noise): **2,022, 48, 43, 35**; **2,852** sample points were noise.
 
-### Representative narrative review and comparison
+### Aggregate qualitative review and comparison
 
-The reproducible review used the two nearest-to-centroid representatives from each of the three largest K-Means clusters and every HDBSCAN cluster. PCA K-Means' largest reviewed cluster had two stalling/loss-of-acceleration narratives, a coherent broad symptom theme. Another reviewed K-Means cluster mixed a recall appointment narrative with an intake-manifold warning/repair narrative; a separate cluster was strongly Takata recall boilerplate. HDBSCAN's largest group mixed recall-repair language with a stall/crash/airbag nondeployment report. Its smaller groups had more coherent headlight-failure examples and door-latch/door-opening examples.
+The reproducible review used the two nearest-to-centroid representatives from each of the three largest K-Means clusters and every HDBSCAN cluster. Aggregate review found both heterogeneous themes and some comparatively more focused small groups. Recall-administration wording appeared among some reviewed examples. The review is qualitative and does not establish a defect class.
 
 Compared with original vectors, PCA K-Means silhouette rose by **0.015430** but remains near zero. PCA HDBSCAN coverage rose by **24.82 percentage points**, while its silhouette fell by **0.081767**; the newly assigned majority-sized cluster includes mixed recall administration and physical symptoms in reviewed examples. The larger HDBSCAN coverage is therefore not by itself evidence of better defect grouping.
 
@@ -128,9 +126,9 @@ Compared with original vectors, PCA K-Means silhouette rose by **0.015430** but 
 
 Seed-123 cluster sizes, descending: original K-Means **647, 341, 337, 332, 317, 313, 280, 273, 270, 229, 216, 213, 206, 185, 182, 170, 155, 134, 102, 98**; PCA K-Means **520, 453, 355, 313, 311, 281, 279, 256, 247, 240, 229, 225, 225, 210, 202, 191, 171, 162, 117, 13**. Original HDBSCAN: **931, 54** (4,015 noise); PCA HDBSCAN: **2,194, 32** (2,774 noise).
 
-### Narrative review and cross-sample comparison
+### Aggregate qualitative review and cross-sample comparison
 
-Review used two deterministic representative narratives from each of the three largest K-Means clusters and both HDBSCAN clusters for each representation. Original K-Means examples included Takata recall boilerplate and mixed steering/acceleration reports, alongside a broad power-loss group. PCA K-Means examples included related powertrain/electrical failures, but also combined distinct power-steering and engine-stall reports. Original HDBSCAN separated a Takata-heavy group from a small windshield/dashboard-cracking group. PCA HDBSCAN's small group was coherent low-beam-headlight complaints; its large group mixed an automatic-braking malfunction report with recall-repair boilerplate.
+Review used two deterministic representatives from each of the three largest K-Means clusters and both HDBSCAN clusters for each representation. Across both samples, aggregate review found that large groups could mix broad topics, while some smaller groups appeared more focused. These observations are exploratory, and no individual complaint content is reproduced.
 
 The metric direction matched seed 42: K-Means silhouette increased with PCA (**+0.015430** on seed 42; **+0.020163** on seed 123), though both PCA scores remain low (**0.058108**, **0.054894**). HDBSCAN coverage increased by **24.82 percentage points** on each sample (seed 42: 18.14% to 42.96%; seed 123: 19.70% to 44.52%), while its silhouette decreased on both (by **0.081767** and **0.054133**, respectively). PCA HDBSCAN formed four clusters on seed 42 but two on seed 123. Coverage gains are reproducible; semantic coherence is mixed and the large assigned groups remain broad. Cluster label numbers are arbitrary and must not be compared directly across independent runs.
 

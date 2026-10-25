@@ -33,8 +33,9 @@ class TestClusteringHelpers(unittest.TestCase):
         self.assertGreater(result["score"], 0.9)
 
     def test_recall_boilerplate_removal_preserves_symptom_text(self):
+        # Synthetic fixture only; no source complaint narrative is used.
         text = (
-            "THE CONTACT RECEIVED NOTIFICATION OF NHTSA CAMPAIGN NUMBER: 15V312000 (AIR BAGS). "
+            "THE CONTACT RECEIVED NOTIFICATION OF NHTSA CAMPAIGN NUMBER: SYN456789 (AIR BAGS). "
             "THE PART TO DO THE RECALL REPAIR WAS UNAVAILABLE. AIRBAG DID NOT DEPLOY IN A CRASH."
         )
         revised, removed_count = remove_recall_repair_boilerplate(text)

@@ -8,12 +8,12 @@
 
 ## Data integrity
 - [ ] Preserve canonical datasets, embedding shards, clustering outputs, frozen evaluation settings, and saved research results.
-- [ ] Confirm raw source archives (if included/required) are placed in `data/raw/`; follow `docs/canonical_dataset.md` for their names and provenance.
+- [ ] Obtain the six raw source archives locally under `data/raw/` when required; follow [`data_audit.md`](data_audit.md) for filenames and source provenance, and [`canonical_dataset.md`](canonical_dataset.md) for canonical schemas and build details.
 - [ ] Do not include credentials or secrets. Check institutional rules for redistributing source data.
 
 ## Tests and demo
-- [ ] From the project root, install `requirements.txt` and run `python -m pytest -v` in the submission environment.
-- [ ] Start the dashboard using the command in `docs/local_dashboard.md` and confirm all four tabs load.
+- [ ] After locally generating the canonical Parquet tables and four dashboard outputs as described in `docs/local_dashboard.md`, install `requirements.txt` and run `python -m pytest -v`; data-dependent tests need those excluded files.
+- [ ] Start the dashboard using the command in `docs/local_dashboard.md` only after all four outputs exist, then confirm all four tabs load.
 - [ ] Rehearse the saved-output sequence: component monthly trend, a selected system-month alert, then recorded-action comparison.
 - [ ] Verify the displayed interpretation distinguishes heuristic signals and recorded action dates from public warnings.
 

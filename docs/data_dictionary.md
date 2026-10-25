@@ -2,6 +2,10 @@
 
 This document details the field-level definitions, physical types, NHTSA layout mappings, semantic roles, and data considerations across the NHTSA datasets used in **DEFECTRADAR**.
 
+## Source attribution and authorship boundary
+
+NHTSA source material includes raw field names, positions, official definitions, and source-file layouts. Refer to the NHTSA [Datasets and APIs inventory](https://www.nhtsa.gov/nhtsa-datasets-and-apis), the official [complaint layout (`CMPL.txt`)](https://static.nhtsa.gov/odi/ffdd/cmpl/CMPL.txt), [investigation layout (`INV.txt`)](https://static.nhtsa.gov/odi/ffdd/inv/INV.txt), [recall layout (`RCL.txt`)](https://static.nhtsa.gov/odi/ffdd/rcl/RCL.txt), and [recall import instructions](https://static.nhtsa.gov/odi/ffdd/rcl/Import_Instructions_Recalls.pdf). The inventory lists `RCL.txt` as a recall variable list. Browser/web previews did not render its direct endpoint, but a direct `curl` retrieval succeeded on 2026-10-25 (see [data audit](data_audit.md)); the retrieved layout is marked `Last Updated May 2025` and is the primary source for `FLAT_RCL` widths. The import-instructions PDF is an older corroborating NHTSA reference. Source field names, positions, and documented widths are attributed to these NHTSA materials. Local missingness statistics, canonical mappings, normalization notes, and interpretations are project-authored. Recall-document CSV value descriptions are project-authored summaries of source-supplied fields. This is schema documentation only: no complaint row values or narratives are reproduced. These links provide provenance, not a license or redistribution grant for NHTSA material.
+
 ---
 
 ## 1. Complaint Dataset Mapping & Field Dictionary
@@ -14,16 +18,16 @@ The raw complaint files (`COMPLAINTS_RECEIVED_2015-2019.txt` and `COMPLAINTS_REC
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | **Complaint ID** | `CMPLID` | 1 | `CHAR(9)` | 0.00% | NHTSA internal sequence identifier. Unique for each `(Complaint, Component)` physical row. |
 | **ODI Number** | `ODINO` | 2 | `CHAR(9)` | 0.00% | NHTSA case reference number. Identifies the distinct complaint report. One `ODINO` can have multiple rows (one per failed component). |
-| **Manufacturer** | `MFR_NAME` | 3 | `CHAR(40)` | <0.002% | Official corporate manufacturer name (e.g., `General Motors, LLC`, `Ford Motor Company`). |
-| **Make** | `MAKETXT` | 4 | `CHAR(25)` | <0.002% | Vehicle brand/make in uppercase (e.g., `FORD`, `CHEVROLET`, `HONDA`, `TOYOTA`). |
-| **Model** | `MODELTXT` | 5 | `CHAR(256)` | <0.002% | Vehicle model text (e.g., `EXPLORER`, `SILVERADO 1500`, `CR-V`). May contain trim/submodel tokens. |
+| **Manufacturer** | `MFR_NAME` | 3 | `CHAR(40)` | <0.002% | Official corporate manufacturer name as supplied by NHTSA. |
+| **Make** | `MAKETXT` | 4 | `CHAR(25)` | <0.002% | Vehicle make/brand as supplied in uppercase. |
+| **Model** | `MODELTXT` | 5 | `CHAR(256)` | <0.002% | Vehicle model text; may contain trim/submodel tokens. |
 | **Model Year** | `YEARTXT` | 6 | `CHAR(4)` | <0.002% | Model year (`YYYY`). Note: `9999` denotes unknown or not applicable. |
 | **Crash Flag** | `CRASH` | 7 | `CHAR(1)` | 0.00% | Crash involvement: `'Y'` (Yes) or `'N'` (No). 5.2% are `'Y'`. |
 | **Incident/Failure Date** | `FAILDATE` | 8 | `CHAR(8)` | 0.00% | Date failure occurred (`YYYYMMDD`). Occasional historical typographical errors require sanity filtering. |
 | **Fire Flag** | `FIRE` | 9 | `CHAR(1)` | 0.00% | Fire involvement: `'Y'` (Yes) or `'N'` (No). 2.1% are `'Y'`. |
 | **Injuries** | `INJURED` | 10 | `NUMBER(2)` | 0.00% | Number of persons injured in the incident ($0$ if none). |
 | **Deaths** | `DEATHS` | 11 | `NUMBER(2)` | 0.00% | Number of fatalities in the incident ($0$ if none). |
-| **Component** | `COMPDESC` | 12 | `CHAR(128)` | <0.001% | Standardized NHTSA component taxonomy string, often hierarchical separated by colons (e.g. `SERVICE BRAKES, HYDRAULIC:ANTILOCK:WHEEL SPEED SENSOR`). |
+| **Component** | `COMPDESC` | 12 | `CHAR(128)` | <0.001% | NHTSA-supplied standardized component taxonomy string, often hierarchical and colon-delimited. |
 | **City** | `CITY` | 13 | `CHAR(30)` | 0.00% | Complainant city of residence. |
 | **State** | `STATE` | 14 | `CHAR(2)` | 0.00% | Complainant US state postal code (e.g., `CA`, `TX`, `FL`). |
 | **VIN** | `VIN` | 15 | `CHAR(11)` | 6.06% | First 11 characters of vehicle VIN (WMI + VDS), anonymized by NHTSA to omit serial number. |
@@ -50,6 +54,8 @@ The raw complaint files (`COMPLAINTS_RECEIVED_2015-2019.txt` and `COMPLAINTS_REC
 
 The defect investigations file records official NHTSA investigations opened since 1972 (154,401 records, 11 tab-delimited columns).
 
+**Source-specific campaign-number widths:** NHTSA's [investigation layout](https://static.nhtsa.gov/odi/ffdd/inv/INV.txt) defines `FLAT_INV.CAMPNO` as `CHAR(9)`. The current [recall layout (`RCL.txt`)](https://static.nhtsa.gov/odi/ffdd/rcl/RCL.txt), marked `Last Updated May 2025`, defines `FLAT_RCL.CAMPNO` as `CHAR(12)`; direct retrieval succeeded on 2026-10-25 after browser/web previews did not render it. The older [recall import instructions](https://static.nhtsa.gov/odi/ffdd/rcl/Import_Instructions_Recalls.pdf), Appendix A, corroborate `CHAR(12)` (field list dated March 14, 2008; instructions document dated February 2014). These are distinct source-file schemas, not a type contradiction. The local archive's exact source version was not independently compared, so this records the official layout rather than a local archive width measurement.
+
 | Field # | Column Name | Type | Key Role | Description |
 | :--- | :--- | :--- | :--- | :--- |
 | 1 | `NHTSA_ACTION_NUMBER` | `CHAR(10)` | **PK** (Investigation ID) | Unique case action identifier. Prefix denotes phase:<br>• `PE`: Preliminary Evaluation (initial defect query)<br>• `EA`: Engineering Analysis (in-depth engineering probe)<br>• `DP`: Defect Petition<br>• `RQ`: Recall Query (investigation into recall adequacy)<br>• `AQ`: Audit Query |
@@ -60,8 +66,8 @@ The defect investigations file records official NHTSA investigations opened sinc
 | 6 | `MFR_NAME` | `CHAR(40)` | Dimension | Vehicle manufacturer name. |
 | 7 | `ODATE` | `CHAR(8)` | **Validation Milestone** | Date investigation was formally **Opened** (`YYYYMMDD`). Core milestone for early detection backtesting. |
 | 8 | `CDATE` | `CHAR(8)` | Temporal | Date investigation was **Closed** (`YYYYMMDD`). Blank if investigation remains open. |
-| 9 | `CAMPNO` | `CHAR(12)` | **FK** $\to$ Recall | NHTSA Recall Campaign Number resulting from this investigation (if a defect was confirmed and recall ordered). |
-| 10 | `SUBJECT` | `CHAR(200)` | Text | Short title / subject of the investigation (e.g., `UNINTENDED ACCELERATION`, `AIR BAG INFLATOR RUPTURE`). |
+| 9 | `CAMPNO` | `CHAR(9)` | **FK** $\to$ Recall | NHTSA Recall Campaign Number resulting from this investigation (if a defect was confirmed and recall ordered). |
+| 10 | `SUBJECT` | `CHAR(200)` | Text | NHTSA-supplied short title or subject for the investigation. |
 | 11 | `SUMMARY` | `CHAR(6000)`| Text | Comprehensive investigation summary outlining defect mechanics, consumer failure reports received, engineering tests, and closing action. |
 
 ---
@@ -70,14 +76,16 @@ The defect investigations file records official NHTSA investigations opened sinc
 
 The post-2010 recalls file details safety-related defect and non-compliance campaigns (245,651 records, 29 tab-delimited columns).
 
+For `FLAT_RCL`, the directly retrieved NHTSA `RCL.txt` layout (last updated May 2025) lists `CAMPNO CHAR(12)`, corroborated by the older import instructions. This is distinct from `FLAT_INV.CAMPNO CHAR(9)`. Preprocessing stores each source value as a trimmed, uppercase string without padding or truncating it to either declared width.
+
 | Field # | Column Name | Type | Key Role | Description |
 | :--- | :--- | :--- | :--- | :--- |
 | 1 | `RECORD_ID` | `NUMBER(9)` | Row ID | Unique sequence identifier for each record row. |
-| 2 | `CAMPNO` | `CHAR(12)` | **PK** (Campaign ID) | NHTSA Safety Recall Campaign Number (e.g., `15V078000`). Repeated across multiple affected models. |
+| 2 | `CAMPNO` | `CHAR(12)` | **PK** (Campaign ID) | NHTSA Safety Recall Campaign Number, repeated across multiple affected models. |
 | 3 | `MAKETXT` | `CHAR(25)` | Dimension | Affected vehicle make. |
 | 4 | `MODELTXT` | `CHAR(256)` | Dimension | Affected vehicle model. |
 | 5 | `YEARTXT` | `CHAR(4)` | Dimension | Affected model year (`YYYY`). |
-| 6 | `MFGCAMPNO` | `CHAR(20)` | Dimension | Internal manufacturer recall campaign code (e.g., `N04`, `16V-123`). |
+| 6 | `MFGCAMPNO` | `CHAR(20)` | Dimension | Internal manufacturer recall campaign code (synthetic format example: `XXV-NNN`). |
 | 7 | `COMPNAME` | `CHAR(256)` | Dimension | Component description affected by the recall. |
 | 8 | `MFGNAME` | `CHAR(40)` | Dimension | Name of entity filing Part 573 Defect/Noncompliance report. |
 | 9 | `BGMAN` | `CHAR(8)` | Temporal | Begin date of manufacturing of affected population (`YYYYMMDD`). |
@@ -89,9 +97,9 @@ The post-2010 recalls file details safety-related defect and non-compliance camp
 | 15 | `MFGTXT` | `CHAR(40)` | Dimension | Detailed manufacturer string. |
 | 16 | `RCDATE` | `CHAR(8)` | **Validation Milestone** | Date Part 573 Defect Report was received by NHTSA (`YYYYMMDD`). **Ground truth date of recall**. |
 | 17 | `DATEA` | `CHAR(8)` | Temporal | Date recall record was entered into NHTSA database. |
-| 20 | `DESC_DEFECT` | `CHAR(6000)`| **Semantic Ground Truth** | Official technical description of the safety defect (e.g. solder joint cracking, fluid leak). |
-| 21 | `CONEQUENCE_DEFECT`| `CHAR(2000)`| Text | Official explanation of safety consequences (e.g., loss of steering control, vehicle fire). |
-| 22 | `CORRECTIVE_ACTION`| `CHAR(6000)`| Text | Official remedy summary (e.g., dealer will inspect and replace sensor free of charge). |
+| 20 | `DESC_DEFECT` | `CHAR(6000)`| **Semantic Ground Truth** | Source field containing the official defect description. |
+| 21 | `CONEQUENCE_DEFECT`| `CHAR(2000)`| Text | Source field containing the stated safety consequences. |
+| 22 | `CORRECTIVE_ACTION`| `CHAR(6000)`| Text | Source field containing the stated corrective action. |
 | 24 | `RCL_CMPT_ID` | `CHAR(27)` | Sub-ID | Unique identifier for the recalled component. |
 | 28 | `DO_NOT_DRIVE` | `CHAR(3)` | Severity Flag | Urgent safety advisory: `'Yes'` or `'No'`. |
 | 29 | `PARK_OUTSIDE` | `CHAR(3)` | Severity Flag | Urgent fire hazard advisory: `'Yes'` or `'No'`. |
@@ -102,11 +110,11 @@ The post-2010 recalls file details safety-related defect and non-compliance camp
 
 CSV files containing document-level metadata for associated technical service bulletins, manufacturer notices, and remedy procedures.
 
-| Column Header | Type | Description & Example Values |
+| Column Header | Type | Description |
 | :--- | :--- | :--- |
-| `NHTSA ID` | `STRING` | Shortened Campaign ID prefix (e.g., `15C002`, `20E003`, `21V123`). Maps to `FLAT_RCL.CAMPNO` via prefix. |
-| `DOCUMENT NAME` | `STRING` | PDF filename filed in NHTSA docket (e.g., `RCMN-20E003-7457.pdf`, `RCRIT-15V078-1234.pdf`). |
+| `NHTSA ID` | `STRING` | Shortened campaign identifier supplied in the recall-document metadata; concrete campaign values are omitted. Its separate prefix mapping to `FLAT_RCL.CAMPNO` is not the exact investigation-to-recall matching used in historical evaluation. |
+| `DOCUMENT NAME` | `STRING` | Source-supplied PDF docket filename; concrete filenames are omitted. |
 | `MAKE` | `STRING` | Vehicle/Equipment Make. |
 | `MODEL` | `STRING` | Vehicle/Equipment Model. |
 | `MODEL YEAR` | `STRING` | Vehicle/Equipment Model Year (`9999` if across all years or equipment). |
-| `SUMMARY` | `STRING` | Short abstract describing document contents (e.g., *“OEM Notice informing dealers of stop-sale and remedy parts availability”*). |
+| `SUMMARY` | `STRING` | Source-supplied document abstract. It may contain NHTSA- or manufacturer-authored text and is not reproduced here. |

@@ -42,9 +42,9 @@ The project utilizes six official National Highway Traffic Safety Administration
   - Maximum components per single complaint: 17 components.
   - **Critical Rule:** Deduplication on `ODINO` alone drops 130,546 component observations. Each row represents a `(Complaint, Component)` pair.
 - **Date Ranges & Validity:**
-  - Received Date (`LDATE`): `2015-01-01` to `2019-12-31` (100% valid dates, 0 missing).
-  - Incident/Failure Date (`FAILDATE`): `1906-06-22` to `2019-12-31` (99.99% valid dates; 61 records with historic/typo years like 1906, 1910).
-  - Date Added (`DATEA`): `1997-06-27` to `2020-01-14` (0 missing).
+  - Received Date (`LDATE`): 2015–2019 (100% valid dates, 0 missing).
+  - Incident/Failure Date (`FAILDATE`): 1906–2019 (99.99% valid dates; 61 records with historical/typographic outlier years).
+  - Date Added (`DATEA`): 1997–2020 (0 missing).
 - **Severity & Safety Indicators:**
   - Crashes (`CRASH`): 28,108 cases marked 'Y' (5.74%), 461,701 marked 'N'.
   - Fires (`FIRE`): 11,380 cases marked 'Y' (2.32%), 478,429 marked 'N'.
@@ -104,9 +104,9 @@ The project utilizes six official National Highway Traffic Safety Administration
   - Maximum components per single complaint: 9 components.
   - ODINO overlap with 2015–2019 dataset: **0** (strictly disjoint across receipt periods).
 - **Date Ranges & Validity:**
-  - Received Date (`LDATE`): `2020-01-01` to `2024-12-31` (100% valid, 0 missing).
-  - Incident/Failure Date (`FAILDATE`): `1917-01-01` to `2024-12-31` (100% valid format).
-  - Date Added (`DATEA`): `2019-12-30` to `2025-01-06` (0 missing).
+  - Received Date (`LDATE`): 2020–2024 (100% valid, 0 missing).
+  - Incident/Failure Date (`FAILDATE`): 1917–2024 (100% valid format).
+  - Date Added (`DATEA`): 2019–2025 (0 missing).
 - **Severity & Safety Indicators:**
   - Crashes (`CRASH`): 19,125 cases marked 'Y' (4.57%), 399,759 marked 'N'.
   - Fires (`FIRE`): 8,015 cases marked 'Y' (1.91%), 410,869 marked 'N'.
@@ -164,8 +164,8 @@ The project utilizes six official National Highway Traffic Safety Administration
   - `AQ` (Audit Query): 2,027 rows (1.31%)
   - Other (`SQ`, `C`, `RP`, `ID`): 849 rows
 - **Date Ranges:**
-  - Investigation Open Date (`ODATE`): `1972-03-10` to `2026-09-21`
-  - Investigation Close Date (`CDATE`): `1972-05-30` to `2026-09-24` (75,625 currently open or closed without explicit date)
+  - Investigation Open Date (`ODATE`): 1972–2026
+  - Investigation Close Date (`CDATE`): 1972–2026 (75,625 currently open or closed without explicit date)
 - **Top Vehicle Makes in Investigations:**
   1. HONDA: 16,597 rows
   2. DODGE: 13,462 rows
@@ -200,8 +200,8 @@ The project utilizes six official National Highway Traffic Safety Administration
   - Maximum vehicle variants in a single campaign: 727 distinct `(Make, Model, Year)` records (e.g., massive Takata airbag campaigns or platform-wide electrical recalls).
   - **Key Finding:** `CAMPNO` is NOT 1-to-1 with table rows; one campaign covers dozens of affected vehicles and components.
 - **Date Ranges:**
-  - Report Received Date (`RCDATE`): `2010-01-01` to `2026-09-30`
-  - Owner Notification Date (`ODATE`): `1980-12-31` to `2027-08-16` (3,926 missing)
+  - Report Received Date (`RCDATE`): 2010–2026
+  - Owner Notification Date (`ODATE`): 1980–2027 (3,926 missing)
 - **Recall Initiation Influence (`INFLUENCED_BY`):**
   - `MFR` (Manufacturer Initiated): 215,148 rows (87.58%)
   - `ODI` (Influenced by NHTSA Office of Defects Investigation): 28,644 rows (11.66%)
@@ -216,7 +216,7 @@ The project utilizes six official National Highway Traffic Safety Administration
   - `CONEQUENCE_DEFECT` (Consequence Summary): 0 missing (100% complete)
   - `CORRECTIVE_ACTION` (Remedy Summary): 0 missing (100% complete)
 - **Recommended Role in DefectRadar:**
-  - **Ground truth outcome dataset**. Used for backtesting whether an emerging cluster preceded the official recall date (`RCDATE`), and semantic validation comparing complaint cluster narratives with the official manufacturer `DESC_DEFECT`.
+  - **Ground truth outcome dataset**. Used for backtesting whether an emerging cluster preceded the official recall date (`RCDATE`), and semantic validation comparing aggregate complaint-cluster themes with the official manufacturer `DESC_DEFECT`.
 
 ---
 
@@ -272,6 +272,45 @@ erDiagram
 | Linkage Pathway | Primary Key / Foreign Key | Matching Strategy | Quality / Completeness |
 | :--- | :--- | :--- | :--- |
 | **Complaint to Component** | `ODINO` $\to$ `COMPDESC` | 1-to-Many relational split | 100% deterministic (no data loss) |
-| **Investigation to Recall** | `FLAT_INV.CAMPNO` $\to$ `FLAT_RCL.CAMPNO` | Exact alphanumeric string match | 81.42% of investigation rows carry valid `CAMPNO` |
-| **Recall to Recall Documents** | `FLAT_RCL.CAMPNO`[:6] $\to$ `RCL_DOCS.NHTSA ID` | Prefix match (e.g. `15V078000` $\to$ `15V078`) | High coverage for major consumer recalls |
+| **Investigation to Recall** | `FLAT_INV.CAMPNO` $\to$ `FLAT_RCL.CAMPNO` | Exact campaign-string equality after source normalization | 81.42% of investigation rows carry valid `CAMPNO` |
+| **Recall to Recall Documents** | `FLAT_RCL.CAMPNO`[:6] $\to$ `RCL_DOCS.NHTSA ID` | Prefix match (synthetic format example: `YYVNNNNNN` $\to$ `YYVNNN`) | High coverage for major consumer recalls |
 | **Complaints to Recalls/Invs** | `(MAKE, MODEL, YEAR)` + Semantic Similarity + Temporal bounds | Probabilistic cluster backtest (Strictly $T_{\text{complaint}} < T_{\text{recall}}$) | Zero data leakage required |
+
+**Campaign-link validation:** The investigation and recall preprocessing paths trim surrounding whitespace and uppercase `CAMPNO`, preserving the result as a string without width padding or truncation. Validation reports full-identifier equality under `investigations_with_exact_recall_campaign_match`; a separate `investigations_with_prefix_assisted_recall_candidate` count is diagnostic only and never contributes to exact links, canonical data, or event matching. Historical evaluation independently counts full-string campaign equality. No historical evaluation was rerun and no existing results were rewritten.
+
+## 4. Source provenance and local archive integrity
+
+### Official source pages
+
+- [NHTSA Datasets and APIs](https://www.nhtsa.gov/nhtsa-datasets-and-apis) [1] is the agency's download inventory for complaints, investigations, and recalls. It lists the six expected archive names below.
+- [NHTSA Resources Related to Investigations and Recalls](https://www.nhtsa.gov/resources-investigations-recalls) [2] identifies the related public data resources and directs users to Datasets and APIs for downloads.
+
+### Official field layouts and attribution boundary
+
+NHTSA's dataset page directs users to the corresponding text layout files for field names and descriptions [1]. The official [complaint layout (`CMPL.txt`)](https://static.nhtsa.gov/odi/ffdd/cmpl/CMPL.txt) [3] and [investigation layout (`INV.txt`)](https://static.nhtsa.gov/odi/ffdd/inv/INV.txt) [4] are readable references; `INV.txt` defines `FLAT_INV.CAMPNO` as `CHAR(9)`. The inventory lists a recall layout named `RCL.txt` [1]. Browser/web previews did not render the direct endpoint, but a direct `curl` retrieval succeeded on 2026-10-25; the retrieved layout is marked `Last Updated May 2025` and defines `FLAT_RCL.CAMPNO` as `CHAR(12)` [6]. The accessible [recall import instructions](https://static.nhtsa.gov/odi/ffdd/rcl/Import_Instructions_Recalls.pdf) [5] corroborate `CHAR(12)` in Appendix A (field list last updated March 14, 2008; instructions document dated February 2014). The two source files therefore have distinct, verified widths; the local archive's exact version was not independently compared. These are NHTSA source references, not project-authored definitions.
+
+Archive contents, field names, source codes, component-taxonomy values, and source-file layouts originate with NHTSA. The inventory measurements, local archive hashes, canonical mappings, missingness calculations, and research interpretations in this repository are project-authored summaries of local data. Attribution does not grant a license to NHTSA data or narrative text; the repository's code license does not cover these materials.
+
+The official pages were checked on 2026-10-24. NHTSA's live listing reports 2026-10-24 update timestamps for these archive entries [1]; those are source-site timestamps, not acquisition dates for the local files. Local filesystem modification times are shown below only as filesystem metadata, not as verified download dates. The project contains no per-archive download URL, acquisition date, or source-version record for the six local ZIP copies. Therefore, these hashes identify the local ZIPs inspected on 2026-10-24 and do not establish that they match the current files on NHTSA's site. Recompute hashes if a local archive is replaced and record the actual source URL and acquisition date when obtaining a copy. Never upload the ZIPs; `.gitignore` excludes `/data/`.
+
+### Expected local archives
+
+| Dataset | Expected file under `data/raw/` | Size (bytes) | Filesystem mtime (not acquisition date) | Local SHA-256 |
+|---|---|---:|---|---|
+| Complaints, received 2015–2019 | `COMPLAINTS_RECEIVED_2015-2019.zip` | 81,302,724 | 2026-10-03 11:01:28 +05:30 | `d8d95b377ad5e40f014c83030102f5c43b4cd7c0f804d4a66d4b6f4239e94f60` |
+| Complaints, received 2020–2024 | `COMPLAINTS_RECEIVED_2020-2024.zip` | 75,873,879 | 2026-10-03 10:33:07 +05:30 | `99c2c8be392e306c324454e95e351f2a1f652d606ea658962d5021c7066d32ef` |
+| Defect investigations | `FLAT_INV.zip` | 4,300,161 | 2026-10-03 10:44:52 +05:30 | `f42563637c5a0839a0a2cb58827a3f9d7f72013a142d83b0259e394a6cfacd33` |
+| Recall campaigns after 2010 | `FLAT_RCL_POST_2010.zip` | 14,964,935 | 2026-10-03 10:49:07 +05:30 | `245d66611c66ee7cedb2b6253bdd79fb8928e8aa529de43ba5a95bab546c4924` |
+| Recall documents, 2015–2019 | `RCL_FROM_2015_2019.zip` | 6,460,427 | 2026-10-03 10:58:56 +05:30 | `59dd5996cbfa181df000484a860bed24976caa7dbe39dd2add2821814d545071` |
+| Recall documents, 2020–2024 | `RCL_FROM_2020_2024.zip` | 4,013,024 | 2026-10-03 10:47:00 +05:30 | `e30cc096b4f2312e0f1a733398ed900a726ac6ae5de9a6e88f749a0df8d7ca67` |
+
+NHTSA's dataset metadata marks Complaints and Recalls with “Privacy and Confidentiality: Yes.” This is recorded as a source-page flag only; it is not a legal or privacy review and does not establish redistribution permission.[1]
+
+## Sources
+
+[1] https://www.nhtsa.gov/nhtsa-datasets-and-apis — NHTSA Datasets and APIs
+[2] https://www.nhtsa.gov/resources-investigations-recalls — NHTSA Resources Related to Investigations and Recalls
+[3] https://static.nhtsa.gov/odi/ffdd/cmpl/CMPL.txt — NHTSA Consumer Complaints field layout
+[4] https://static.nhtsa.gov/odi/ffdd/inv/INV.txt — NHTSA Defect Investigations field layout
+[5] https://static.nhtsa.gov/odi/ffdd/rcl/Import_Instructions_Recalls.pdf — NHTSA Recall Import Instructions
+[6] https://static.nhtsa.gov/odi/ffdd/rcl/RCL.txt — NHTSA recall field layout (last updated May 2025)

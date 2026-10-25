@@ -20,7 +20,7 @@ Based on empirical auditing of **1,775,003 records** across six raw NHTSA archiv
 ### 2.1 Question 1: Is the complaint data suitable for NLP?
 **Finding: YES — Exceptionally well-suited.**
 - **Empirical Evidence:** Out of 908,693 complaint rows spanning 2015 to 2024, fewer than 5 rows have missing narratives (>99.999% text completeness).
-- **Linguistic Nature:** Consumers write descriptive, symptom-focused accounts of vehicle malfunctions. They detail operating conditions (*"while traveling at 65 mph on the highway"*, *"in cold weather"*, *"under heavy braking"*), tactile/visual cues (*"steering wheel locked"*, *"smoke coming from steering column"*, *"check engine light illuminated"*, *"loud clicking noise from transmission"*), and resulting consequences (*"vehicle lost motive power and stalled in traffic"*).
+- **Linguistic Nature:** Aggregate review indicates that complaint narratives describe operating conditions, reported symptoms, warning indicators, and consequences. These corpus-level characteristics support testing text-analysis methods without reproducing individual complaint wording.
 - **Suitability for Modern NLP:** The vocabulary contains dense automotive terminology and clear semantic clusters. Pre-trained transformer models fine-tuned or adapted on technical text (e.g. `sentence-transformers` like `all-MiniLM-L6-v2`) will capture semantic affinities between synonymous consumer complaints far better than keyword searches or basic topic models.
 
 ### 2.2 Question 2: Is the complaint volume sufficient?
@@ -35,7 +35,7 @@ Based on empirical auditing of **1,775,003 records** across six raw NHTSA archiv
   - **Median narrative length:** 455 characters (2015–2019) and 496 characters (2020–2024).
   - **90th percentile length:** 1,119 characters (~180–220 words) and 1,167 characters.
   - **Mean length:** ~570 characters across the entire corpus.
-- **Narrative Depth:** Narratives rarely consist of terse single-word feedback (e.g. "bad car"). Rather, they are structured formal complaints submitted through NHTSA's Vehicle Owners Questionnaire (VOQ) hotline, mobile app, and web portal, providing rich engineering symptom details.
+- **Narrative Depth:** Aggregate length and completeness measures indicate that narratives generally contain more context than brief generic feedback. The project reports corpus-level measures only and does not reproduce individual complaint text.
 
 ### 2.4 Question 4: Can complaints be connected to vehicle/model information?
 **Finding: YES — Near-perfect completeness on core vehicle dimensions.**
@@ -86,3 +86,7 @@ Phase 1 audit and analysis confirms that the NHTSA datasets provide complete, hi
 > *"Can semantic and temporal analysis of consumer vehicle complaints identify emerging defect patterns before they result in an official NHTSA investigation or recall?"*
 
 The data foundation is validated, structured, and ready for systematic preprocessing and subsequent development phases.
+
+## Source attribution
+
+The underlying datasets and source-field layouts are NHTSA material; official links are collected in [`docs/data_audit.md`](data_audit.md) and [`docs/data_dictionary.md`](data_dictionary.md). Record counts, completeness measures, and feasibility conclusions in this report are project-authored aggregate calculations. No individual complaint wording or record identifiers are reproduced.

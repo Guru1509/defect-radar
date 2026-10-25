@@ -5,10 +5,42 @@ on all generated Parquet files in data/processed/.
 """
 
 import os
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Set
 
 import pyarrow.compute as pc
 import pyarrow.parquet as pq
+
+
+def _campaign_match_metrics(
+    investigation_campaign_numbers: List[str], recall_campaign_numbers: Set[str]
+) -> Dict[str, int]:
+    """Separate exact campaign links from six-character diagnostic candidates.
+
+    Inputs are already source-normalized strings. Prefix candidates are counted
+    only when the full identifier has no exact match; they are not links.
+    """
+    exact_matches = sum(
+        1 for campaign in investigation_campaign_numbers
+        if campaign in recall_campaign_numbers
+    )
+
+    recall_prefixes = {
+        recall[:prefix_length]
+        for recall in recall_campaign_numbers
+        if recall
+        for prefix_length in range(1, min(6, len(recall)) + 1)
+    }
+    prefix_candidates = sum(
+        1
+        for campaign in investigation_campaign_numbers
+        if campaign not in recall_campaign_numbers
+        and campaign[:6] in recall_prefixes
+    )
+
+    return {
+        "investigations_with_exact_recall_campaign_match": exact_matches,
+        "investigations_with_prefix_assisted_recall_candidate": prefix_candidates,
+    }
 
 
 def validate_complaints_dataset(
@@ -182,8 +214,8 @@ def validate_investigations_dataset(
     null_opened_dates = inv_table["opened_date"].null_count
 
     # 4. Recall cross-reference check
-    matched_recalls = 0
     total_with_recall = 0
+    campaign_match_metrics = _campaign_match_metrics([], set())
     if recalls_path and os.path.exists(recalls_path):
         rec_campnos = set(
             pq.read_table(recalls_path, columns=["campaign_number"])["campaign_number"].to_pylist()
@@ -192,9 +224,7 @@ def validate_investigations_dataset(
             c for c in inv_table["recall_campaign_number"].to_pylist() if c
         ]
         total_with_recall = len(linked_campnos)
-        matched_recalls = sum(
-            1 for c in linked_campnos if c in rec_campnos or any(rc.startswith(c[:6]) for rc in rec_campnos)
-        )
+        campaign_match_metrics = _campaign_match_metrics(linked_campnos, rec_campnos)
 
     all_passed = (
         is_inv_unique
@@ -212,7 +242,7 @@ def validate_investigations_dataset(
         "orphan_investigation_vehicles": orphan_vehicles,
         "null_opened_dates": null_opened_dates,
         "investigations_with_recall_no": total_with_recall,
-        "investigations_linked_to_recalls": matched_recalls,
+        **campaign_match_metrics,
         "all_checks_passed": all_passed,
     }
 

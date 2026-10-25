@@ -109,8 +109,13 @@ class TestDataFoundation(unittest.TestCase):
                 first_line = f.readline().decode("latin-1").rstrip("\r\n")
                 fields = first_line.split("\t")
                 self.assertEqual(len(fields), 29, f"Expected 29 columns in FLAT_RCL, found {len(fields)}")
-                campno = fields[1]
-                self.assertEqual(len(campno), 9, f"Expected 9-char CAMPNO format (e.g., 10V078000), got {campno}")
+                campno = fields[1].strip()
+                self.assertTrue(campno, "Expected a non-empty FLAT_RCL CAMPNO")
+                self.assertLessEqual(
+                    len(campno),
+                    12,
+                    f"CAMPNO exceeds the recall CHAR(12) field width: {campno}",
+                )
 
     def test_dates_can_be_parsed(self):
         """Verify that date normalization function correctly handles NHTSA YYYYMMDD dates."""
@@ -130,7 +135,7 @@ class TestDataFoundation(unittest.TestCase):
         with zipfile.ZipFile(sample_path) as z:
             inner_name = z.namelist()[0]
             with z.open(inner_name) as f:
-                # Read the first 5 rows which we know share ODINO 516612
+                # Read three rows and verify the repeated complaint key without printing it.
                 rows = [f.readline().decode("latin-1").rstrip("\r\n").split("\t") for _ in range(3)]
                 cmpl_ids = [r[0] for r in rows]
                 odinos = [r[1] for r in rows]
@@ -155,9 +160,12 @@ class TestDataFoundation(unittest.TestCase):
                     campnos.append(line.split("\t")[1].strip())
 
                 self.assertTrue(any(c for c in campnos), "No valid CAMPNOs found")
-                # Validate standard 9-character format (2-digit year + type letter + sequence + 000)
-                sample_camp = campnos[0]
-                self.assertEqual(len(sample_camp), 9, f"Unexpected CAMPNO length: {sample_camp}")
+                sample_camp = next(camp for camp in campnos if camp)
+                self.assertLessEqual(
+                    len(sample_camp),
+                    12,
+                    f"CAMPNO exceeds the recall CHAR(12) field width: {sample_camp}",
+                )
 
     def test_missing_value_statistics_can_be_calculated(self):
         """Verify that missing-value calculation logic correctly computes rates on real batches."""

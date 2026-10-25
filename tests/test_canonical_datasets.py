@@ -175,13 +175,19 @@ class TestCanonicalParquetDatasets(unittest.TestCase):
         table = pq.read_table(
             self.cmpl_path, columns=["complaint_id", "received_date", "date_added"]
         )
-        # Verify specific record 516612 has received_date in 2016 and date_added in 1997
-        t_sample = table.filter(
-            pc.equal(table["complaint_id"], "516612")
-        )
-        self.assertEqual(t_sample.num_rows, 1)
-        self.assertEqual(str(t_sample["received_date"][0]), "2016-01-06")
-        self.assertEqual(str(t_sample["date_added"][0]), "1997-06-27")
+        # Compare date-field relationships in aggregate rather than identifying a specific row.
+        same_date_rows = table.filter(
+            pc.equal(table["date_added"], table["received_date"])
+        ).num_rows
+        date_added_after_rows = table.filter(
+            pc.greater(table["date_added"], table["received_date"])
+        ).num_rows
+        date_added_before_rows = table.filter(
+            pc.less(table["date_added"], table["received_date"])
+        ).num_rows
+        self.assertEqual(same_date_rows, 651047)
+        self.assertEqual(date_added_after_rows, 213)
+        self.assertEqual(date_added_before_rows, 2)
 
         # Received dates must all be between 2015 and 2024
         min_date = pc.min(table["received_date"]).as_py()

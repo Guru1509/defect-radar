@@ -11,23 +11,33 @@ source .venv/bin/activate
 python -m pip install -r requirements.txt
 ```
 
-The project declares pandas, NumPy, PyArrow, python-dateutil, python-dotenv, sentence-transformers, Streamlit, and pytest. The dashboard expects the four locally generated outputs described below; they are not included in a fresh clone, and installation does not generate them. If any are missing, the app lists their paths and points to the local-generation instructions.
+The project declares pandas, NumPy, PyArrow, python-dateutil, python-dotenv, sentence-transformers, Streamlit, and pytest. Raw archives, canonical Parquet tables, and the four locally generated dashboard outputs are excluded from a fresh clone; installation does not create them. The dashboard lists missing output paths and points to local-generation instructions, and cannot display results until all four outputs exist.
 
 ## 2. Local data and required dashboard outputs
 
 The repository includes **no data files or generated dashboard outputs**. Raw NHTSA archives, canonical processed tables, embedding shards, clustering outputs, and the four dashboard outputs below are intentionally excluded and ignored by Git. Use only source data you are permitted to obtain and process; this repository does not grant redistribution rights. The source-archive inventory is in [`data_audit.md`](data_audit.md); [`canonical_dataset.md`](canonical_dataset.md) documents canonical tables and the build stage.
 
-To prepare dashboard inputs locally:
+To prepare dashboard inputs locally, use source data you are permitted to obtain and process. The six expected archive names are listed in [`data_audit.md`](data_audit.md); place the local ZIPs under `data/raw/`. Never add those ZIPs or generated outputs to Git.
 
-1. Place locally obtained source archives under `data/raw/`.
-2. From the project root, run the documented canonical build stage: `python -m src.preprocessing.build_dataset`.
-3. Follow the stage guides in dependency order: [`temporal_baseline.md`](temporal_baseline.md) generates monthly trends; [`defect_emergence_score.md`](defect_emergence_score.md) generates the scorecard; [`historical_evaluation_pilot.md`](historical_evaluation_pilot.md) generates the historical alert and metrics outputs. The four expected local paths are:
-   - `data/processed/monthly_component_trends.parquet` — monthly component-system counts, shares, and historical baselines.
-   - `data/processed/monthly_emergence_scorecard.parquet` — heuristic scores and episode states.
-   - `data/processed/historical_evaluation_alerts.parquet` — frozen historical alert runs.
-   - `data/processed/historical_evaluation_metrics.json` — frozen recorded-action comparison metrics.
+1. From the project root, run `python -m src.preprocessing.build_dataset` to build canonical Parquet tables. This module has no `--help` CLI; invoking it runs the pipeline.
+2. Generate monthly trends using [`temporal_baseline.md`](temporal_baseline.md):
+   ```bash
+   python -m src.temporal.monthly_baseline \
+     --complaints-path data/processed/complaints.parquet \
+     --components-path data/processed/complaint_components.parquet \
+     --output-path data/processed/monthly_component_trends.parquet \
+     --batch-size 50000
+   ```
+3. Generate the scorecard using [`defect_emergence_score.md`](defect_emergence_score.md): `python -m src.temporal.emergence_score`.
+4. Generate the historical alert and metrics outputs using [`historical_evaluation_pilot.md`](historical_evaluation_pilot.md): `python -c 'from src.temporal.historical_evaluation import run_pilot; run_pilot()'`. This function refuses to overwrite existing evaluation outputs.
 
-There is no single orchestration command. Embeddings and clustering are separate optional work and are not needed for the dashboard. The dashboard does not generate or modify these outputs. If any are absent, it lists the missing paths and points back to this runbook. Run the saved-output demonstration only after generating all four files locally.
+The four expected local paths are:
+- `data/processed/monthly_component_trends.parquet` — monthly component-system counts, shares, and historical baselines.
+- `data/processed/monthly_emergence_scorecard.parquet` — heuristic scores and episode states.
+- `data/processed/historical_evaluation_alerts.parquet` — frozen historical alert runs.
+- `data/processed/historical_evaluation_metrics.json` — frozen recorded-action comparison metrics.
+
+There is no single orchestration command. Embeddings and clustering are separate optional work and are not needed for the dashboard. The dashboard does not generate or modify these outputs. If any are absent, it lists the missing paths and points back to this runbook. It cannot display results until all four files have been generated locally.
 
 ## 3. Stage map
 
@@ -40,11 +50,11 @@ source files → canonical Parquet tables
                                                         └→ dashboard reads saved artifacts
 ```
 
-Embeddings are not consumed by temporal scoring or historical evaluation. The dashboard is read-only and loads saved trends, scorecard rows, alert runs, and metrics. Optional stage reproduction instructions are in [`temporal_baseline.md`](temporal_baseline.md), [`defect_emergence_score.md`](defect_emergence_score.md), and [`historical_evaluation_pilot.md`](historical_evaluation_pilot.md); do not run those rebuilding commands for this demonstration.
+Embeddings are not consumed by temporal scoring or historical evaluation. The dashboard is read-only and loads saved trends, scorecard rows, alert runs, and metrics. On a fresh clone, follow the stage guides above to generate local outputs before using the dashboard. If the outputs already exist and you are only repeating the saved-output demonstration, do not rerun rebuilding stages.
 
 ## 4. Run tests
 
-From the project root:
+From the project root, after placing the six raw ZIPs and building the canonical Parquet tables. The full suite includes tests that require those excluded data files; `tests/test_dashboard_smoke.py` additionally requires all four dashboard outputs. A fresh clone must complete the local generation steps in section 2 before running the data-dependent tests.
 
 ```bash
 python -m pytest -v

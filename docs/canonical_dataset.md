@@ -105,7 +105,7 @@ graph TD
 ### 2.3 Dataset 3: `recalls.parquet`
 - **File Location:** `data/processed/recalls.parquet`
 - **Purpose:** Canonical campaign-level ground truth table for all safety recalls issued post-2010.
-- **Primary Key:** `campaign_number` (NHTSA Recall Campaign Number `CAMPNO`, e.g. `15V078000`).
+- **Primary Key:** `campaign_number` (NHTSA Recall Campaign Number `CAMPNO`).
 - **Field Schema:**
   - `campaign_number` (`string`, PK): 9-character NHTSA campaign code.
   - `manufacturer` (`string`): Filing manufacturer name (`MFGNAME`).
@@ -187,8 +187,8 @@ graph TD
 - **File Location:** `data/processed/recall_documents.parquet`
 - **Purpose:** Supplementary engineering documentation table capturing manufacturer recall notices, technical service bulletins, and field remedy procedures.
 - **Field Schema:**
-  - `nhtsa_id` (`string`): Shortened campaign code prefix (e.g. `15V078`).
-  - `document_name` (`string`): PDF docket filename (e.g. `RCRIT-15V078-1234.pdf`).
+  - `nhtsa_id` (`string`): Shortened campaign code prefix; concrete identifiers are omitted.
+  - `document_name` (`string`): Source-supplied PDF docket filename; concrete filenames are omitted.
   - `document_type` (`string`): Document category derived from prefix (`RCMN` = OEM Notice, `RCRIT` = Field Remedy Instructions, `RCONL` = Consumer Notice Letter).
   - `make_raw` (`string`): Make.
   - `make_normalized` (`string`): Standardized make.
